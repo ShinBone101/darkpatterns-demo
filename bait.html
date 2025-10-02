@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShopSmart: Dark Pattern Detector - Urgency Demo</title>
+    <style>
+        /* CSS: Dark Theme for the "Detector" App Look */
+        :root {
+            --bg-dark: #1e2a38; /* Dark Blue/Grey Background */
+            --text-light: #f0f0f0;
+            --highlight-blue: #007bff;
+            --highlight-red: #dc3545;
+            --sidebar-dark: #121c25;
+            --warning-yellow: #ffc107; /* For urgency alerts */
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .main-layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* --- Left/Center Content (The Mock Website) --- */
+        .content-area {
+            flex-grow: 1;
+            padding: 30px;
+        }
+        
+        .header-section {
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #334358;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .header-logo {
+            background-color: var(--highlight-blue);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-right: 20px;
+            color: white;
+        }
+
+        .search-bar {
+            flex-grow: 1;
+            background: #2b394d;
+            border: 1px solid #334358;
+            border-radius: 5px;
+            padding: 10px;
+            color: var(--text-light);
+            outline: none;
+        }
+
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            color: var(--text-light);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+        
+        .product-card {
+            background: #2b394d;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 160px;
+            object-fit: cover;
+            border-bottom: 1px solid #334358;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        h3.product-title-card {
+            font-size: 1.1em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            height: 2.8em;
+            overflow: hidden;
+        }
+
+        .product-price {
+            color: var(--highlight-blue);
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .add-btn {
+            background-color: var(--highlight-blue);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .add-btn:hover {
+            background-color: #0056b3;
+        }
+
+        /* --- Urgency/Scarcity Styling (The Dark Pattern) --- */
+        .urgency-text {
+            color: var(--warning-yellow); /* Yellow for alert */
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* --- Right Sidebar (The Detector UI) --- */
+        .sidebar-detector {
+            width: 300px;
+            min-width: 280px;
+            background-color: var(--sidebar-dark);
+            padding: 20px;
+            border-left: 1px solid #334358;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .detector-title {
+            color: var(--highlight-blue);
+            font-size: 1.4em;
+            margin-bottom: 20px;
+        }
+
+        .risk-box {
+            background: #334358;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
+        .risk-text {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--highlight-red);
+            margin-top: 10px;
+        }
+
+        h3.pattern-list-header {
+            color: var(--text-light);
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        .pattern-list div {
+            padding: 10px 0;
+            border-bottom: 1px dashed #334358;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95em;
+        }
+        .pattern-list div:last-child {
+            border-bottom: none;
+        }
+
+        .pattern-count {
+            background-color: var(--highlight-blue);
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+        .pattern-list .highlighted-pattern {
+            color: var(--warning-yellow);
+            font-weight: bold;
+        }
+
+        .report-btn {
+            background: var(--highlight-red);
+            color: white;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            margin-top: 30px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .report-btn:hover {
+            background-color: #b32535;
+        }
+
+        /* --- The Pop-up Alert --- */
+        #detector-popup {
+            display: none; /* Hidden initially */
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-dark);
+            color: var(--text-light);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            border: 4px solid var(--highlight-red);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        #detector-popup h4 {
+            color: var(--highlight-red);
+            margin-top: 0;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .popup-btn {
+            padding: 10px 20px;
+            margin: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .btn-highlight {
+            background-color: var(--highlight-blue);
+            color: white;
+        }
+        
+        .btn-ignore {
+            background-color: #555;
+            color: white;
+        }
+        
+        /* Highlight Styling for the Dark Pattern Trick */
+        .urgency-highlight {
+            border: 3px solid var(--warning-yellow) !important;
+            box-shadow: 0 0 15px var(--warning-yellow);
+            transition: all 0.5s;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 900px) {
+            .main-layout {
+                flex-direction: column;
+            }
+            .sidebar-detector {
+                width: 100%;
+                height: auto;
+                border-left: none;
+                border-top: 1px solid #334358;
+                position: static;
+            }
+            .content-area {
+                padding: 20px;
+            }
+        }
+        @media (max-width: 500px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-section {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .header-logo, .search-bar {
+                margin-bottom: 15px;
+            }
+            .search-bar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-layout">
+        
+        <div class="content-area">
+            <div class="header-section">
+                <div class="header-logo">DP</div>
+                <div style="font-size: 1.2em; margin-right: 25px; color: var(--text-light);">ShopSmart</div>
+                <input type="text" class="search-bar" placeholder="Search products, offers...">
+            </div>
+
+            <h1>Popular Picks</h1>
+            
+            <div class="product-grid">
+
+                
+                <div class="product-card">
+                    <img src="sneakers.jpg" class="product-image" alt="Comfy Sneakers">
+                    <div class="card-body">
+                        <h3 class="product-title-card">Nike Air Max Flyknit (Red)</h3>
+                        <div class="product-price">₹4,999</div>
+                        <button class="add-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                
+                <div class="product-card" id="urgency-target">
+                    <img src="watch.jpg" class="product-image" alt="Racer Watch">
+                    <div class="card-body">
+                        <h3 class="product-title-card">Elegant Chrono Racer Watch</h3>
+                        <p class="urgency-text">⚡ Only 2 left in stock! Grab it now!</p>
+                        <div class="product-price">₹7,499</div>
+                        <button class="add-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                
+                <div class="product-card">
+                    <img src="headphones.jpg" class="product-image" alt="Premium Headphones">
+                    <div class="card-body">
+                        <h3 class="product-title-card">Premium Noise-Cancelling Headphones</h3>
+                        <div class="product-price">₹12,500</div>
+                        <button class="add-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+                
+                <div class="product-card" id="misdirection-target">
+                    <img src="backpack.jpg" class="product-image" alt="Leather Backpack">
+                    <div class="card-body">
+                        <h3 class="product-title-card">Luxury Leather Travel Backpack</h3>
+                        <p style="font-size: 0.9em; margin: 5px 0;">
+                            Upgrade to <a href="#" style="color: var(--highlight-red); font-weight: bold;" onclick="triggerMisdirection(event)">Monthly Premium Access</a> for 15% off.
+                        </p>
+                        <div class="product-price">₹8,999</div>
+                        <button class="add-btn">Add to Cart</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <div class="sidebar-detector">
+            <h2 class="detector-title">Dark Pattern Detector</h2>
+            
+            <div class="risk-box">
+                Estimated site risk
+                <div style="font-size: 0.9em; margin-bottom: 5px;">Based on detected patterns:</div>
+                <div class="risk-text">83% ⚠️</div>
+            </div>
+            
+            <h3 class="pattern-list-header">Detected Patterns</h3>
+            <div class="pattern-list">
+                <div id="pattern-urgency">Urgency/Scarcity <span class="pattern-count">1</span></div>
+                <div id="pattern-misdirection">Misdirection <span class="pattern-count">1</span></div>
+                <div id="pattern-hidden-costs">Hidden Costs <span class="pattern-count">0</span></div>
+                <div id="pattern-trick-questions">Trick Questions <span class="pattern-count">0</span></div>
+                <div id="pattern-confirmshaming">Confirmshaming <span class="pattern-count">0</span></div>
+                <div id="pattern-forced-continuity">Forced Continuity <span class="pattern-count">0</span></div>
+            </div>
+            
+            <button class="report-btn">
+                Report this site
+            </button>
+        </div>
+    </div>
+    
+    
+    <div id="detector-popup">
+        <h4>Dark Pattern Detected!</h4>
+        <p id="popup-message">We found a potential dark pattern on this page. Click "Highlight" to see where it is.</p>
+        <button class="popup-btn btn-ignore" onclick="hidePopup()">Ignore</button>
+        <button class="popup-btn btn-highlight" onclick="highlightDetectedPattern()">Highlight</button>
+    </div>
+
+    <script>
+        // JAVASCRIPT: Pop-up and Highlighting Logic
+        
+        const popup = document.getElementById('detector-popup');
+        const popupMessage = document.getElementById('popup-message');
+        
+        // Target elements for highlighting
+        const urgencyTarget = document.getElementById('urgency-target'); 
+        const misdirectionTarget = document.getElementById('misdirection-target');
+        
+        let currentDetectedPattern = ''; // To store which pattern was detected
+
+        // 1. Function to show the pop-up after a delay (6 seconds)
+        function showPopupAfterDelay() {
+            // We'll simulate detecting Urgency/Scarcity first
+            currentDetectedPattern = 'Urgency/Scarcity';
+            popupMessage.innerHTML = 'We detected an **"Urgency/Scarcity"** pattern. Click "Highlight" to see where it is.';
+            // Add highlight class to the pattern list item
+            document.getElementById('pattern-urgency').classList.add('highlighted-pattern');
+
+            setTimeout(() => {
+                popup.style.display = 'block';
+            }, 6000); // 6 seconds
+        }
+
+        // 2. Function to hide the pop-up
+        function hidePopup() {
+            popup.style.display = 'none';
+        }
+
+        // 3. Function to highlight the currently detected dark pattern
+        function highlightDetectedPattern() {
+            hidePopup();
+            let elementToHighlight;
+            let patternName;
+            let alertMessage;
+
+            if (currentDetectedPattern === 'Urgency/Scarcity') {
+                elementToHighlight = urgencyTarget;
+                patternName = "Urgency/Scarcity";
+                alertMessage = "🚨 Urgency/Scarcity Pattern Detected! 🚨\n\nThe 'Only 2 left in stock!' message is designed to create a false sense of urgency, pressuring you to buy immediately without thinking. This often isn't true scarcity!";
+                // After highlighting urgency, prepare for misdirection next
+                currentDetectedPattern = 'Misdirection'; 
+                document.getElementById('pattern-urgency').classList.remove('highlighted-pattern');
+                document.getElementById('pattern-misdirection').classList.add('highlighted-pattern');
+
+                // Schedule the next pop-up for the misdirection pattern
+                setTimeout(() => {
+                    popupMessage.innerHTML = 'We also found a **"Misdirection"** pattern. Click "Highlight" again to see the next one.';
+                    popup.style.display = 'block';
+                }, 5000); 
+                
+            } else if (currentDetectedPattern === 'Misdirection') {
+                elementToHighlight = misdirectionTarget;
+                patternName = "Misdirection";
+                alertMessage = "🚨 Misdirection Pattern Detected! 🚨\n\nThe prominent link for 'Monthly Premium Access' tries to make you click it instead of the regular 'Add to Cart' for a one-time purchase. This is visual Misdirection!";
+                
+                // End of demo state
+                currentDetectedPattern = ''; 
+                document.getElementById('pattern-misdirection').classList.remove('highlighted-pattern');
+                
+            } else {
+                alert("The detector found no other major patterns to highlight at this time.");
+                return;
+            }
+
+            // Apply highlight CSS
+            if (elementToHighlight) {
+                elementToHighlight.classList.add('urgency-highlight');
+                elementToHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Show a final alert with the explanation
+            setTimeout(() => {
+                alert(alertMessage);
+                // Remove the highlight after the user dismisses the alert (or short time)
+                if (elementToHighlight) {
+                     setTimeout(() => {
+                        elementToHighlight.classList.remove('urgency-highlight');
+                    }, 1000);
+                }
+            }, 700);
+        }
+
+        // Function to trigger Misdirection pattern directly if user clicks the link
+        function triggerMisdirection(event) {
+            event.preventDefault();
+            // Clear any old highlights
+            urgencyTarget.classList.remove('urgency-highlight');
+            document.getElementById('pattern-urgency').classList.remove('highlighted-pattern');
+            
+            // Set for Misdirection detection
+            currentDetectedPattern = 'Misdirection';
+            popupMessage.innerHTML = 'You clicked a potential **"Misdirection"** pattern. Click "Highlight" to see the explanation!';
+            document.getElementById('pattern-misdirection').classList.add('highlighted-pattern');
+            
+            popup.style.display = 'block';
+        }
+
+
+        // Start the timer when the page finishes loading
+        window.onload = showPopupAfterDelay;
+    </script>
+</body>
+</html>
